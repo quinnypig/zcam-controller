@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	backoff "github.com/cenkalti/backoff/v4"
+	backoff "github.com/cenkalti/backoff/v5"
 )
 
 func TestGetOperation(t *testing.T) {
@@ -51,9 +51,9 @@ func TestGetOperation(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), tc.timeout)
 			defer cancel()
 
-			err := backoff.Retry(
+			_, err := backoff.Retry(ctx,
 				GetOperation(ctx, t.TempDir(), ts.URL+"/data"),
-				backoff.WithContext(backoff.NewConstantBackOff(tc.retryInterval), ctx))
+				backoff.WithBackOff(backoff.NewConstantBackOff(tc.retryInterval)))
 			if tc.wantErr == nil {
 				if err != nil {
 					t.Errorf("unexpected error: %s", err.Error())
