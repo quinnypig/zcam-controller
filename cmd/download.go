@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/cavaliergopher/grab/v3"
-	backoff "github.com/cenkalti/backoff/v4"
+	backoff "github.com/cenkalti/backoff/v5"
 	"github.com/spf13/cobra"
 )
 
@@ -59,9 +59,10 @@ var downloadCmd = &cobra.Command{
 			response codes, other times it speaks out of turn. "Fail and retry"
 			is sloppy, and yet here we are. I hate this so much.
 			*/
-			err = backoff.Retry(
+			_, err = backoff.Retry(cmd.Context(),
 				GetOperation(cmd.Context(), output, source),
-				backoff.WithMaxRetries(backoff.NewConstantBackOff(retry), uint64(retries)))
+				backoff.WithBackOff(backoff.NewConstantBackOff(retry)),
+				backoff.WithMaxTries(uint(retries)))
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -76,21 +77,21 @@ var downloadCmd = &cobra.Command{
 }
 
 // GetOperation returns a retryable Operation to download a file
-func GetOperation(ctx context.Context, output, source string) backoff.Operation {
-	return func() error {
+func GetOperation(ctx context.Context, output, source string) backoff.Operation[struct{}] {
+	return func() (struct{}, error) {
 		req, err := grab.NewRequest(output, source)
 		if err != nil {
-			return err
+			return struct{}{}, err
 		}
 		req = req.WithContext(ctx)
 
 		resp := grab.DefaultClient.Do(req)
 		if resp.Err() != nil {
-			return resp.Err()
+			return struct{}{}, resp.Err()
 		}
 
 		fmt.Println("Download saved to", resp.Filename)
-		return nil
+		return struct{}{}, nil
 	}
 }
 
