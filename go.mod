@@ -6,6 +6,7 @@ require (
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/cenkalti/backoff/v6 v6.0.1
+	github.com/cenkalti/backoff/v7 v7.0.0
 	github.com/spf13/cobra v1.4.0
 )
 
